@@ -15,6 +15,10 @@ typedef struct {
     char nom[NB_CARACTERES];
 } Personne;
 
+typedef struct {
+    char concours[NB_CARACTERES];
+} Epreuve;
+
 /*
 typedef struct {
     char prenom[NB_CARACTERES];
@@ -25,10 +29,10 @@ void modifier_personne(Personne *personne_a_modifier) {
 scan f f prénom nom
 personn_a_modifier->prenom = prenom;
 
+scanf("%d", &nombre);
 }
 
 */
-
 
 int Inscrire(Personne participants[], int *numParticipants) {
     Personne p;
@@ -48,9 +52,6 @@ int Inscrire(Personne participants[], int *numParticipants) {
     return 0;
 }
 
-// il le fait à l'infini, comprends pas
-
-
 int Participants(const Personne participants[], const int *numParticipants) {
     if (*numParticipants == 0) {
         printf("Aucun participant\n");
@@ -65,29 +66,65 @@ int Participants(const Personne participants[], const int *numParticipants) {
     return 0;
 }
 
+int Creer(Epreuve ccours[], int *numConcours) { // modifier les concours, y'en a trop pour différent de choses
+    Concours c;
+    scanf("%s", c.concours);
 
+    for (int i = 0; i < *numConcours; ++i) {  // faire une focntion à part pour comparer (INSCRCIRE)
+        if (strcmp(c.concours, ccours[i].concours) == 0) {
+            printf("Nom Incorrect\n"); 
+        }
+    }
+
+    ccours[*numConcours] = c;
+    ++(*numConcours);
+    printf("Creation enregistree (%d)\n", *numConcours);
+}
+
+int Concours(const Epreuve ccours[], const int *numConcours) {
+    if (*numConcours == 0) {
+        printf("Aucun concours cree\n");
+        return 0;
+    }
+
+    else {
+        for (int i = 0; i < *numConcours; ++i) {
+            printf("(%d) %s : 0 participant", i+1, ccours[i].concours);
+        }
+    }
+    return 0
+}
+
+int Gain(){
+    
+}
 
 int main() {
     Personne participants[MAX_PARTICIPANTS];
     int numParticipants = 0;
     
+    Epreuve ccours[MAX_PARTICIPANTS];
+    int numConcours = 0;
+
     char cde[31] = ""; // oups, ne serait-ce un nombre magique ?
     do {
         scanf("%s", cde);
         if (strcmp(cde, "INSCRIRE") == 0){
             Inscrire(participants, &numParticipants);
         } // TODO
+
         else if (strcmp(cde, "PARTICIPANTS") == 0){
-             Participants(participants, &numParticipants);
-             return 0;
+            Participants(participants, &numParticipants);
+        } // TODO
+        
+        else if (strcmp(cde, "CREER") == 0){
+            Creer(ccours, &numConcours);
+        } // TODO
+        
+        else if (strcmp(cde, "CONCOURS") == 0){
+            Concours(ccours, &numConcours);
         } // TODO
         /*
-        else if (strcmp(cde, "CREER") == 0){
-
-        } // TODO
-        else if (strcmp(cde, "CONCOURS") == 0){
-
-        } // TODO
         else if (strcmp(cde, "GAIN") == 0){
 
         } // TODO
