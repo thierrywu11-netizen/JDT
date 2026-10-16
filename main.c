@@ -66,13 +66,13 @@ int Participants(const Personne participants[], const int *numParticipants) {
     return 0;
 }
 
-int Creer(Epreuve ccours[], int *numConcours) { // modifier les concours, y'en a trop pour différent de choses
-    Concours c;
+void Creer(Epreuve ccours[], int *numConcours) { // modifier les concours, y'en a trop pour différent de choses
+    Epreuve c;
     scanf("%s", c.concours);
 
     for (int i = 0; i < *numConcours; ++i) {  // faire une focntion à part pour comparer (INSCRCIRE)
         if (strcmp(c.concours, ccours[i].concours) == 0) {
-            printf("Nom Incorrect\n"); 
+            printf("Nom Incorrect\n");
         }
     }
 
@@ -92,12 +92,12 @@ int Concours(const Epreuve ccours[], const int *numConcours) {
             printf("(%d) %s : 0 participant", i+1, ccours[i].concours);
         }
     }
-    return 0
+    return 0;
 }
 
-int Gain(){
-    
-}
+// int Gain(){
+
+// }
 
 int main() {
     Personne participants[MAX_PARTICIPANTS];
