@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+// !!!! Noms des fonctions et des variables doivent commencer par une minuscule sauf ENUM !!!!
+
 void Exit() {
     exit(0);
 }
@@ -34,6 +36,10 @@ scanf("%d", &nombre);
 
 */
 
+/*
+Tu peux mettre void au lieu de int pour les fonctions suivantes : inscrire, participants, concours, etc..., pour return dans un void, c'est juste "return;" et puis à la fin de chaque fonction return plus besoin de return à la fin à chaque fois
+*/
+
 int Inscrire(Personne participants[], int *numParticipants) {
     Personne p;
     scanf("%s %s", p.prenom, p.nom);
@@ -52,6 +58,10 @@ int Inscrire(Personne participants[], int *numParticipants) {
     return 0;
 }
 
+/* 
+le "else" dans la fonction participants est inutile, si la condition du if est vérfifié, ça affiche Aucun participant, puis return et ignore le reste du code, si le if n'est pas vérifié alors ça fait directement le code après le bloc de if, donc le "else" ne sert à rien, on retrouve souvent cette situation lorsqu'on return dans le "if", en général on fait plein de "if" avec des returns pour les préconditions (ici vérifier que numParticipant != 0 pour que la fonction passe)
+*/
+
 int Participants(const Personne participants[], const int *numParticipants) {
     if (*numParticipants == 0) {
         printf("Aucun participant\n");
@@ -66,6 +76,9 @@ int Participants(const Personne participants[], const int *numParticipants) {
     return 0;
 }
 
+/*
+t'as oublié de return dans le "if" de la boucle "for" dans la fonction créer, ta boucle signifie "s'il le concours existe déjà, alors "Nom Incorrect", si tu return pas, ça continue la fonction alors que c'est censé quitter la fonction
+*/
 void Creer(Epreuve ccours[], int *numConcours) { // modifier les concours, y'en a trop pour différent de choses
     Epreuve c;
     scanf("%s", c.concours);
@@ -81,6 +94,9 @@ void Creer(Epreuve ccours[], int *numConcours) { // modifier les concours, y'en 
     printf("Creation enregistree (%d)\n", *numConcours);
 }
 
+/*
+le "else" dans la fonction concours est inutile pour la meme raison que la fonction participants
+*/
 int Concours(const Epreuve ccours[], const int *numConcours) {
     if (*numConcours == 0) {
         printf("Aucun concours cree\n");
@@ -98,6 +114,10 @@ int Concours(const Epreuve ccours[], const int *numConcours) {
 // int Gain(){
 
 // }
+
+/*
+ça sert pas à grand chose dans ton cas mais c'est bien de t'habituer à "return 0:" à la fin de ton main()
+*/
 
 int main() {
     Personne participants[MAX_PARTICIPANTS];
