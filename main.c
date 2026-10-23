@@ -2,8 +2,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-// !!!! Noms des fonctions et des variables doivent commencer par une minuscule sauf ENUM !!!!
-
 void Exit() {
     exit(0);
 }
@@ -15,39 +13,20 @@ enum {
 typedef struct {
     char prenom[NB_CARACTERES];
     char nom[NB_CARACTERES];
-} Personne;
+} personne;
 
 typedef struct {
-    char concours[NB_CARACTERES];
-} Epreuve;
+    char jeu[NB_CARACTERES];
+} epreuve;
 
-/*
-typedef struct {
-    char prenom[NB_CARACTERES];
-    char nom[NB_CARACTERES];
-} Personne;
-
-void modifier_personne(Personne *personne_a_modifier) {
-scan f f prénom nom
-personn_a_modifier->prenom = prenom;
-
-scanf("%d", &nombre);
-}
-
-*/
-
-/*
-Tu peux mettre void au lieu de int pour les fonctions suivantes : inscrire, participants, concours, etc..., pour return dans un void, c'est juste "return;" et puis à la fin de chaque fonction return plus besoin de return à la fin à chaque fois
-*/
-
-int Inscrire(Personne participants[], int *numParticipants) {
-    Personne p;
+void inscrire(personne participants[], int *numParticipants) {
+    personne p;
     scanf("%s %s", p.prenom, p.nom);
 
     for (int i = 0; i < *numParticipants; ++i) {
         if (strcmp(p.nom, participants[i].nom) == 0 && strcmp(p.prenom, participants[i].prenom) == 0) {
             printf("Nom Incorrect\n");
-            return 0;
+            return;
         }
     }
 
@@ -55,94 +34,98 @@ int Inscrire(Personne participants[], int *numParticipants) {
     ++(*numParticipants);
     printf("Inscription enregistree (%d)\n", *numParticipants);
 
-    return 0;
+    return;
 }
 
-/* 
-le "else" dans la fonction participants est inutile, si la condition du if est vérfifié, ça affiche Aucun participant, puis return et ignore le reste du code, si le if n'est pas vérifié alors ça fait directement le code après le bloc de if, donc le "else" ne sert à rien, on retrouve souvent cette situation lorsqu'on return dans le "if", en général on fait plein de "if" avec des returns pour les préconditions (ici vérifier que numParticipant != 0 pour que la fonction passe)
-*/
+void participant(const personne participants[], const int *numParticipants, int *nbrConcours) {
+    *nbrConcours = 0;
 
-int Participants(const Personne participants[], const int *numParticipants) {
     if (*numParticipants == 0) {
         printf("Aucun participant\n");
-        return 0;
+        return;
     }
 
-    else {
-        for (int i = 0; i < *numParticipants; ++i) {
-            printf("(%d) %s %s : 0 concours\n", i+1 , participants[i].prenom, participants[i].nom);
-        }
+    for (int i = 0; i < *numParticipants; ++i) {
+        printf("(%d) %s %s : %d concours\n", i+1 , participants[i].prenom, participants[i].nom, *nbrConcours);
     }
-    return 0;
+    return;
 }
 
-/*
-t'as oublié de return dans le "if" de la boucle "for" dans la fonction créer, ta boucle signifie "s'il le concours existe déjà, alors "Nom Incorrect", si tu return pas, ça continue la fonction alors que c'est censé quitter la fonction
-*/
-void Creer(Epreuve ccours[], int *numConcours) { // modifier les concours, y'en a trop pour différent de choses
-    Epreuve c;
-    scanf("%s", c.concours);
+void creer(epreuve ccours[], int *numConcours) { // modifier les concours, y'en a trop pour différent de choses
+    epreuve c;
+    scanf("%s", c.jeu);
 
     for (int i = 0; i < *numConcours; ++i) {  // faire une focntion à part pour comparer (INSCRCIRE)
-        if (strcmp(c.concours, ccours[i].concours) == 0) {
+        if (strcmp(c.jeu, ccours[i].jeu) == 0) {
             printf("Nom Incorrect\n");
+            return;
         }
     }
 
     ccours[*numConcours] = c;
     ++(*numConcours);
     printf("Creation enregistree (%d)\n", *numConcours);
+
+    return;
 }
 
-/*
-le "else" dans la fonction concours est inutile pour la meme raison que la fonction participants
-*/
-int Concours(const Epreuve ccours[], const int *numConcours) {
+void concours(const epreuve ccours[], const int *numConcours, int *nbrParticipants) {
+    *nbrParticipants = 0;
     if (*numConcours == 0) {
         printf("Aucun concours cree\n");
-        return 0;
+        return;
     }
 
-    else {
-        for (int i = 0; i < *numConcours; ++i) {
-            printf("(%d) %s : 0 participant", i+1, ccours[i].concours);
-        }
+    for (int i = 0; i < *numConcours; ++i) {
+        printf("(%d) %s : %d participant\n", i+1, ccours[i].jeu, *nbrParticipants);
     }
-    return 0;
+
+    return;
 }
 
-// int Gain(){
+void Gain(const personne participants[], const epreuve ccours[], int *nbrConcours, int *nbrParticipants) {
+    int participantIndex, concoursIndex;
+    scanf("%d %d", &participantIndex, &concoursIndex);
+    
+    if (participantIndex < 1 || participantIndex > MAX_PARTICIPANTS || concoursIndex < 1 || concoursIndex > MAX_PARTICIPANTS) {
+        printf("Index invalide\n");
+        return;
+    }
 
-// }
+    *nbrConcours +=1;
+    *nbrParticipants +=1;
+
+    return;
+} // participants ne marche pas une deuxième fois
 
 /*
 ça sert pas à grand chose dans ton cas mais c'est bien de t'habituer à "return 0:" à la fin de ton main()
 */
 
 int main() {
-    Personne participants[MAX_PARTICIPANTS];
+    personne participants[MAX_PARTICIPANTS];
     int numParticipants = 0;
     
-    Epreuve ccours[MAX_PARTICIPANTS];
+    epreuve ccours[MAX_PARTICIPANTS];
     int numConcours = 0;
 
     char cde[31] = ""; // oups, ne serait-ce un nombre magique ?
     do {
         scanf("%s", cde);
         if (strcmp(cde, "INSCRIRE") == 0){
-            Inscrire(participants, &numParticipants);
+            inscrire(participants, &numParticipants);
         } // TODO
 
         else if (strcmp(cde, "PARTICIPANTS") == 0){
-            Participants(participants, &numParticipants);
+            participant(participants, &numParticipants, &numConcours);
         } // TODO
         
         else if (strcmp(cde, "CREER") == 0){
-            Creer(ccours, &numConcours);
+            creer(ccours, &numConcours);
         } // TODO
         
         else if (strcmp(cde, "CONCOURS") == 0){
-            Concours(ccours, &numConcours);
+            concours(ccours, &numConcours, &numParticipants);
         } // TODO
         /*
         else if (strcmp(cde, "GAIN") == 0){
