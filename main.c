@@ -7,7 +7,7 @@ void Exit() {
 }
 
 enum {
-    NB_CARACTERES = 30, MAX_PARTICIPANTS= 100
+    NB_CARACTERES = 31, MAX_PARTICIPANTS= 100, MAX_CONCOURS= 20
 }; 
 
 typedef struct {
@@ -37,8 +37,7 @@ void inscrire(personne participants[], int *numParticipants) {
     return;
 }
 
-void participant(const personne participants[], const int *numParticipants, int *nbrConcours) {
-    *nbrConcours = 0;
+void participant(const personne participants[], const int *numParticipants, const int *numConcours) {
 
     if (*numParticipants == 0) {
         printf("Aucun participant\n");
@@ -46,7 +45,7 @@ void participant(const personne participants[], const int *numParticipants, int 
     }
 
     for (int i = 0; i < *numParticipants; ++i) {
-        printf("(%d) %s %s : %d concours\n", i+1 , participants[i].prenom, participants[i].nom, *nbrConcours);
+        printf("(%d) %s %s : %d concours\n", i+1 , participants[i].prenom, participants[i].nom);
     }
     return;
 }
@@ -55,7 +54,7 @@ void creer(epreuve ccours[], int *numConcours) { // modifier les concours, y'en 
     epreuve c;
     scanf("%s", c.jeu);
 
-    for (int i = 0; i < *numConcours; ++i) {  // faire une focntion à part pour comparer (INSCRCIRE)
+    for (int i = 0; i < *numConcours; ++i) {
         if (strcmp(c.jeu, ccours[i].jeu) == 0) {
             printf("Nom Incorrect\n");
             return;
@@ -69,34 +68,33 @@ void creer(epreuve ccours[], int *numConcours) { // modifier les concours, y'en 
     return;
 }
 
-void concours(const epreuve ccours[], const int *numConcours, int *nbrParticipants) {
-    *nbrParticipants = 0;
+void concours(const epreuve ccours[], const int *numConcours) {
+    
     if (*numConcours == 0) {
         printf("Aucun concours cree\n");
         return;
     }
 
     for (int i = 0; i < *numConcours; ++i) {
-        printf("(%d) %s : %d participant\n", i+1, ccours[i].jeu, *nbrParticipants);
+        printf("(%d) %s : %d participant\n", i+1, ccours[i].jeu);
     }
 
     return;
 }
 
-void Gain(const personne participants[], const epreuve ccours[], int *nbrConcours, int *nbrParticipants) {
+void gain(const personne participants[], const epreuve ccours[], const int *numParticipants, const int *numConcours) {
     int participantIndex, concoursIndex;
     scanf("%d %d", &participantIndex, &concoursIndex);
-    
-    if (participantIndex < 1 || participantIndex > MAX_PARTICIPANTS || concoursIndex < 1 || concoursIndex > MAX_PARTICIPANTS) {
+
+    if (participantIndex < 1 || participantIndex > *numParticipants || concoursIndex < 1 || concoursIndex > *numConcours) {
         printf("Index invalide\n");
         return;
     }
 
-    *nbrConcours +=1;
-    *nbrParticipants +=1;
-
     return;
-} // participants ne marche pas une deuxième fois
+}
+
+
 
 /*
 ça sert pas à grand chose dans ton cas mais c'est bien de t'habituer à "return 0:" à la fin de ton main()
@@ -106,8 +104,10 @@ int main() {
     personne participants[MAX_PARTICIPANTS];
     int numParticipants = 0;
     
-    epreuve ccours[MAX_PARTICIPANTS];
+    epreuve ccours[MAX_CONCOURS];
     int numConcours = 0;
+
+    int scores[MAX_PARTICIPANTS][MAX_CONCOURS] = {0}; //faire le score avec ça, compter le nombre de non null pour avoir le nombre de concours auxquels le participant a participé, et pareil pour compter le nombre de participant
 
     char cde[31] = ""; // oups, ne serait-ce un nombre magique ?
     do {
@@ -125,12 +125,13 @@ int main() {
         } // TODO
         
         else if (strcmp(cde, "CONCOURS") == 0){
-            concours(ccours, &numConcours, &numParticipants);
+            concours(ccours, &numConcours);
+        } // TODO
+        
+        else if (strcmp(cde, "GAIN") == 0){
+            gain(participants, ccours, &numParticipants, &numConcours); // &numparticipants et l'autre à comprendre pourquoi
         } // TODO
         /*
-        else if (strcmp(cde, "GAIN") == 0){
-
-        } // TODO
         else if (strcmp(cde, "SCORES") == 0){
 
         } // TODO
