@@ -116,7 +116,7 @@ void score(const personne participant[], const epreuve ccours[], const int *numP
     scanf("%d", &participantIndex);
 
     if (participantIndex < 1 || participantIndex > *numParticipants) {
-        printf("Index invalide\n");
+        printf("Identifiant incorrect\n");
         return;
     }
 
@@ -126,6 +126,26 @@ void score(const personne participant[], const epreuve ccours[], const int *numP
             printf("(%d) %s: %d points\n", i+1, ccours[i].jeu, scores[participantIndex - 1][i]);
         }
     }
+}
+
+void classement (const personne participants[], const epreuve ccours[], const int *numParticipants, const int *numConcours, int scores[MAX_PARTICIPANTS][MAX_CONCOURS]) {
+    int concoursIndex;
+    scanf("%d", &concoursIndex);
+
+    if (concoursIndex < 1 || concoursIndex > *numConcours) {
+        printf("Identifiant incorrect\n");
+        return;
+    }
+    printf("%s\n", ccours[concoursIndex - 1].jeu);
+    
+    int a = scores[0][concoursIndex - 1];
+    for (int i = 0; i < *numParticipants; ++i) {
+        if (a < scores[i][concoursIndex - 1]) {
+            a = scores[i][concoursIndex - 1];
+        }
+
+    }
+
 }
 
 /*
