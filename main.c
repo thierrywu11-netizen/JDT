@@ -37,7 +37,7 @@ void inscrire(personne participants[], int *numParticipants) {
     return;
 }
 
-void participant(const personne participants[], const int *numParticipants, const int *numConcours) {
+void participant(const personne participants[], const int *numParticipants, const int *numConcours, const int scores[MAX_PARTICIPANTS][MAX_CONCOURS]) {
 
     if (*numParticipants == 0) {
         printf("Aucun participant\n");
@@ -45,8 +45,15 @@ void participant(const personne participants[], const int *numParticipants, cons
     }
 
     for (int i = 0; i < *numParticipants; ++i) {
-        printf("(%d) %s %s : %d concours\n", i+1 , participants[i].prenom, participants[i].nom);
+        int a = 0;
+        for (int j = 0; j < *numConcours; ++j) {
+            if (scores[i][j] > 0) {
+                a++;
+            }
+        }
+        printf("(%d) %s %s : %d concours\n", i+1 , participants[i].prenom, participants[i].nom, a);
     }
+
     return;
 }
 
@@ -68,7 +75,7 @@ void creer(epreuve ccours[], int *numConcours) { // modifier les concours, y'en 
     return;
 }
 
-void concours(const epreuve ccours[], const int *numConcours) {
+void concours(const epreuve ccours[], const int *numConcours, const int *numParticipants, const int scores[MAX_PARTICIPANTS][MAX_CONCOURS]) {
     
     if (*numConcours == 0) {
         printf("Aucun concours cree\n");
@@ -76,25 +83,50 @@ void concours(const epreuve ccours[], const int *numConcours) {
     }
 
     for (int i = 0; i < *numConcours; ++i) {
-        printf("(%d) %s : %d participant\n", i+1, ccours[i].jeu);
-    }
+        int a = 0;
+        for (int j = 0; j < *numParticipants; ++j) {
+            if (scores[j][i] > 0) {
+                a++;
+            }
+        }
+        printf("(%d) %s : %d participant\n", i+1, ccours[i].jeu, a);
+   }
 
     return;
 }
 
-void gain(const personne participants[], const epreuve ccours[], const int *numParticipants, const int *numConcours) {
-    int participantIndex, concoursIndex;
-    scanf("%d %d", &participantIndex, &concoursIndex);
+void gain(const personne participants[], const epreuve ccours[], const int *numParticipants, const int *numConcours, int scores[MAX_PARTICIPANTS][MAX_CONCOURS]) {
+    int participantIndex, concoursIndex, points;
+    scanf("%d %d %d", &participantIndex, &concoursIndex, &points);
 
     if (participantIndex < 1 || participantIndex > *numParticipants || concoursIndex < 1 || concoursIndex > *numConcours) {
         printf("Index invalide\n");
         return;
     }
 
-    return;
+    for (int i = 0; i < points; ++i) {
+        scores[participantIndex - 1][concoursIndex - 1]++;
+    }
+
+    printf("Gain enregistre\n");
 }
 
+void score(const personne participant[], const epreuve ccours[], const int *numParticipants, const int *numConcours, int scores[MAX_PARTICIPANTS][MAX_CONCOURS]) {
+    int participantIndex;
+    scanf("%d", &participantIndex);
 
+    if (participantIndex < 1 || participantIndex > *numParticipants) {
+        printf("Index invalide\n");
+        return;
+    }
+
+    printf("%s %s:\n", participant[participantIndex - 1].prenom, participant[participantIndex - 1].nom);
+    for (int i = 0; i < *numConcours; ++i) {
+        if (scores[participantIndex - 1][i] > 0) {
+            printf("(%d) %s: %d points\n", i+1, ccours[i].jeu, scores[participantIndex - 1][i]);
+        }
+    }
+}
 
 /*
 ça sert pas à grand chose dans ton cas mais c'est bien de t'habituer à "return 0:" à la fin de ton main()
@@ -117,7 +149,7 @@ int main() {
         } // TODO
 
         else if (strcmp(cde, "PARTICIPANTS") == 0){
-            participant(participants, &numParticipants, &numConcours);
+            participant(participants, &numParticipants, &numConcours, scores);
         } // TODO
         
         else if (strcmp(cde, "CREER") == 0){
@@ -125,16 +157,17 @@ int main() {
         } // TODO
         
         else if (strcmp(cde, "CONCOURS") == 0){
-            concours(ccours, &numConcours);
+            concours(ccours, &numConcours, &numParticipants, scores);
         } // TODO
         
         else if (strcmp(cde, "GAIN") == 0){
-            gain(participants, ccours, &numParticipants, &numConcours); // &numparticipants et l'autre à comprendre pourquoi
+            gain(participants, ccours, &numParticipants, &numConcours, scores); // &numparticipants et l'autre à comprendre pourquoi
+        } // TODO
+        
+        else if (strcmp(cde, "SCORES") == 0){
+            score(participants, ccours, &numParticipants, &numConcours, scores);
         } // TODO
         /*
-        else if (strcmp(cde, "SCORES") == 0){
-
-        } // TODO
         else if (strcmp(cde, "CLASSEMENT") == 0){
 
         } // TODO
