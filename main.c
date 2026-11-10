@@ -185,6 +185,30 @@ void classement (const personne participants[], const epreuve ccours[], const in
     }
 }
 
+void comparaison(const personne participants[], const epreuve ccours[], const int *numParticipants, const int *numConcours, int scores[MAX_PARTICIPANTS][MAX_CONCOURS]) {
+    int concoursIndex1, concoursIndex2;
+    scanf("%d %d", &concoursIndex1, &concoursIndex2);
+
+    if (concoursIndex1 < 1 || concoursIndex1 > *numConcours || concoursIndex2 < 1 || concoursIndex2 > *numConcours) {
+        printf("Identifiant incorrect\n");
+        return;
+    }
+    printf("%s versus %s\n", ccours[concoursIndex2 - 1].jeu, ccours[concoursIndex1 - 1].jeu);
+
+    if (*numParticipants == 0) {
+        printf("Aucun participant\n");
+        return;
+    }
+
+    for (int i = 0; i < *numParticipants; ++i) {
+        int points1 = scores[i][concoursIndex1 - 1];
+        int points2 = scores[i][concoursIndex2 - 1];
+
+        float a = (points1 == 0) ? 0 : (float)points2 / (float)points1; // ? permet de ne pas diviser par 0
+        printf("(%d) %s %s : %d points/%d points : %.2f%%\n", i + 1, participants[i].prenom, participants[i].nom, points2, points1, a * 100);
+    }
+
+}
 
 /*
 ça sert pas à grand chose dans ton cas mais c'est bien de t'habituer à "return 0:" à la fin de ton main()
@@ -229,10 +253,11 @@ int main() {
         else if (strcmp(cde, "CLASSEMENT") == 0){
             classement(participants, ccours, &numParticipants, &numConcours, scores);
         } // TODO
-        /*
+        
         else if (strcmp(cde, "COMPARAISON") == 0){
-
+            comparaison(participants, ccours, &numParticipants, &numConcours, scores);
         } // TODO
+        /*
         else if (strcmp(cde, "BILAN") == 0){
 
         } // TODO */
