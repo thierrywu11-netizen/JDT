@@ -23,15 +23,15 @@ void inscrire(personne participants[], int *numParticipants) {
     personne p;
     scanf("%s %s", p.prenom, p.nom);
 
-    for (int i = 0; i < *numParticipants; ++i) {
+    for (int i = 0; i < *numParticipants; ++i) {     /*recherche si le participant existe déjà */
         if (strcmp(p.nom, participants[i].nom) == 0 && strcmp(p.prenom, participants[i].prenom) == 0) {
             printf("Nom Incorrect\n");
             return;
         }
     }
 
-    participants[*numParticipants] = p;
-    ++(*numParticipants);
+    participants[*numParticipants] = p;     /*ajout du participant */
+    ++(*numParticipants);       /*identifiant du participant */
     printf("Inscription enregistree (%d)\n", *numParticipants);
 
     return;
@@ -39,13 +39,13 @@ void inscrire(personne participants[], int *numParticipants) {
 
 void participant(const personne participants[], const int *numParticipants, const int *numConcours, const int scores[MAX_PARTICIPANTS][MAX_CONCOURS]) {
 
-    if (*numParticipants == 0) {
+    if (*numParticipants == 0) {        /*verifie si y'a des participants */
         printf("Aucun participant\n");
         return;
     }
 
     for (int i = 0; i < *numParticipants; ++i) {
-        int a = 0;
+        int a = 0;      /*compte le nombre de concours auxquels le participant a participé */
         for (int j = 0; j < *numConcours; ++j) {
             if (scores[i][j] > 0) {
                 a++;
@@ -61,7 +61,7 @@ void creer(epreuve ccours[], int *numConcours) { // modifier les concours, y'en 
     epreuve c;
     scanf("%s", c.jeu);
 
-    for (int i = 0; i < *numConcours; ++i) {
+    for (int i = 0; i < *numConcours; ++i) {     // cherche si le concours existe déjà
         if (strcmp(c.jeu, ccours[i].jeu) == 0) {
             printf("Nom Incorrect\n");
             return;
@@ -83,7 +83,7 @@ void concours(const epreuve ccours[], const int *numConcours, const int *numPart
     }
 
     for (int i = 0; i < *numConcours; ++i) {
-        int a = 0;
+        int a = 0;      /*compte le nombre de participants qui participent à ce concours */
         for (int j = 0; j < *numParticipants; ++j) {
             if (scores[j][i] > 0) {
                 a++;
@@ -143,12 +143,16 @@ void classement (const personne participants[], const epreuve ccours[], const in
         return;
     }
 
-    int classement[MAX_PARTICIPANTS];
-    int temp;
+    int classement[MAX_PARTICIPANTS];   //liste des indices des participants triés par score descroissnate
+    int temp;   //variable temporaire pour echanger les indices
+
+    //initialisation du classement avec les indices des participants
 
     for (int i = 0; i < *numParticipants; ++i) {
         classement[i] = i;
     }
+
+    /*faire le tri par score décroissant*/
 
     for (int i = 0; i < *numParticipants; ++i) {
         for (int j = i + 1; j < *numParticipants; ++j) {
@@ -159,8 +163,28 @@ void classement (const personne participants[], const epreuve ccours[], const in
             }
         }
     }
-    
+
+    // affichage du classement
+
+    int a;  //variable pour le classement
+
+    for (int i = 0; i < *numParticipants; i++) {
+
+        int points = scores[classement[i]][concoursIndex - 1]; // Recupere les points du participant
+
+        if (i == 0 || points != scores[classement[i - 1]][concoursIndex - 1]) { 
+            a = i + 1;
+        }
+
+        if ((i > 0 && points == scores[classement[i - 1]][concoursIndex - 1]) || (i < *numParticipants - 1 && points == scores[classement[i + 1]][concoursIndex - 1])) {
+            printf("%dex -> (%d) %s %s : %d points\n", a, classement[i] + 1, participants[classement[i]].prenom, participants[classement[i]].nom, points);
+        }
+        else {
+            printf("%d -> (%d) %s %s : %d points\n", a, classement[i] + 1, participants[classement[i]].prenom, participants[classement[i]].nom, points);
+        }
+    }
 }
+
 
 /*
 ça sert pas à grand chose dans ton cas mais c'est bien de t'habituer à "return 0:" à la fin de ton main()
@@ -201,10 +225,11 @@ int main() {
         else if (strcmp(cde, "SCORES") == 0){
             score(participants, ccours, &numParticipants, &numConcours, scores);
         } // TODO
-        /*
+        
         else if (strcmp(cde, "CLASSEMENT") == 0){
-
+            classement(participants, ccours, &numParticipants, &numConcours, scores);
         } // TODO
+        /*
         else if (strcmp(cde, "COMPARAISON") == 0){
 
         } // TODO
