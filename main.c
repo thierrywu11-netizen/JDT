@@ -138,14 +138,28 @@ void classement (const personne participants[], const epreuve ccours[], const in
     }
     printf("%s\n", ccours[concoursIndex - 1].jeu);
     
-    int a = scores[0][concoursIndex - 1];
-    for (int i = 0; i < *numParticipants; ++i) {
-        if (a < scores[i][concoursIndex - 1]) {
-            a = scores[i][concoursIndex - 1];
-        }
-
+    if (*numParticipants == 0) {
+        printf("Aucun participant\n");
+        return;
     }
 
+    int classement[MAX_PARTICIPANTS];
+    int temp;
+
+    for (int i = 0; i < *numParticipants; ++i) {
+        classement[i] = i;
+    }
+
+    for (int i = 0; i < *numParticipants; ++i) {
+        for (int j = i + 1; j < *numParticipants; ++j) {
+            if (scores[classement[i]][concoursIndex - 1] < scores[classement[j]][concoursIndex - 1]) {
+                temp = classement[i];
+                classement[i] = classement[j];
+                classement[j] = temp;
+            }
+        }
+    }
+    
 }
 
 /*
