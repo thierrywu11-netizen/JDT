@@ -210,6 +210,62 @@ void comparaison(const personne participants[], const epreuve ccours[], const in
 
 }
 
+void bilan(const personne participants[], const epreuve ccours[], const int *numParticipants, const int *numConcours, int scores[MAX_PARTICIPANTS][MAX_CONCOURS]) {
+    int concoursIndex;
+    scanf("%d", &concoursIndex);
+
+    if (concoursIndex < 1 || concoursIndex > *numConcours) {
+        printf("Identifiant incorrect\n");
+        return;
+    }
+    printf("%s\n", ccours[concoursIndex - 1].jeu);
+    
+    if (*numParticipants == 0) {
+        printf("Aucun participant\n");
+        return;
+    }
+
+    int ancienClassement[MAX_PARTICIPANTS];   //liste des indices des participants triés par score descroissnate
+    int nouveauClassement[MAX_PARTICIPANTS];   //liste des indices des participants triés par score descroissnate
+    int temp;   //variable temporaire pour echanger les indices
+
+    // Initialisation des tableaux
+    for (int i = 0; i < *numParticipants; ++i) {
+        ancienClassement[i] = i;
+        nouveauClassement[i] = i;
+    }
+
+    for (int i = 0; i < *numParticipants; ++i) {
+        for (int j = i + 1; j < *numParticipants; ++j) {
+            if (scores[nouveauClassement[i]][concoursIndex - 1] < scores[nouveauClassement[j]][concoursIndex - 1]) {
+                temp = nouveauClassement[i];
+                nouveauClassement[i] = nouveauClassement[j];
+                nouveauClassement[j] = temp;
+            }
+        }
+    }
+
+    int b;
+    int a;  //variable pour le classement
+
+    for (int i = 0; i < *numParticipants; i++) {
+        
+        b = nouveauClassement[i] - ancienClassement[i];
+        int points = scores[nouveauClassement[i]][concoursIndex - 1]; // Recupere les points du participant
+
+        if (i == 0 || points != scores[nouveauClassement[i - 1]][concoursIndex - 1]) { 
+            a = i + 1;
+        }
+
+        if ((i > 0 && points == scores[nouveauClassement[i - 1]][concoursIndex - 1]) || (i < *numParticipants - 1 && points == scores[nouveauClassement[i + 1]][concoursIndex - 1])) {
+            printf("%dex -> (%d) %s %s : %d points : %d places\n", a, nouveauClassement[i] + 1, participants[nouveauClassement[i]].prenom, participants[nouveauClassement[i]].nom, points, b);
+        }
+        else {
+            printf("%d -> (%d) %s %s : %d points : %d places\n", a, nouveauClassement[i] + 1, participants[nouveauClassement[i]].prenom, participants[nouveauClassement[i]].nom, points, b);
+        }
+    }
+}
+
 /*
 ça sert pas à grand chose dans ton cas mais c'est bien de t'habituer à "return 0:" à la fin de ton main()
 */
@@ -257,9 +313,9 @@ int main() {
         else if (strcmp(cde, "COMPARAISON") == 0){
             comparaison(participants, ccours, &numParticipants, &numConcours, scores);
         } // TODO
-        /*
+        
         else if (strcmp(cde, "BILAN") == 0){
-
-        } // TODO */
+            bilan(participants, ccours, &numParticipants, &numConcours, scores);
+        } // TODO
     } while (strcmp(cde, "EXIT") != 0);
 }
