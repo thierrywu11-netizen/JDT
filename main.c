@@ -113,6 +113,25 @@ void gain(const personne participants[], const epreuve ccours[], const int *numP
     printf("Gain enregistre\n");
 }
 
+void verif(const personne participants[], const epreuve ccours[], const int *numParticipants, const int *numConcours, int concoursIndex, int participantIndex, int scores[MAX_PARTICIPANTS][MAX_CONCOURS]) {
+    
+    if (participantIndex < 1 || participantIndex > *numParticipants) {
+        printf("Identifiant incorrect\n");
+        return;
+    }
+
+    if (concoursIndex < 1 || concoursIndex > *numConcours) {
+        printf("Identifiant incorrect\n");
+        return;
+    }
+    printf("%s\n", ccours[concoursIndex - 1].jeu);
+
+    if (*numParticipants == 0) {
+        printf("Aucun participant\n");
+        return;
+    }
+}
+
 void score(const personne participant[], const epreuve ccours[], const int *numParticipants, const int *numConcours, int scores[MAX_PARTICIPANTS][MAX_CONCOURS]) {
     int participantIndex;
     scanf("%d", &participantIndex);
@@ -142,25 +161,6 @@ void trie(int clssement[], int scores[MAX_PARTICIPANTS][MAX_CONCOURS], int numPa
                 clssement[j] = temp;
             }
         }
-    }
-}
-
-void verif(const personne participants[], const epreuve ccours[], const int *numParticipants, const int *numConcours, int concoursIndex, int participantIndex, int scores[MAX_PARTICIPANTS][MAX_CONCOURS]) {
-    
-    if (participantIndex < 1 || participantIndex > *numParticipants) {
-        printf("Identifiant incorrect\n");
-        return;
-    }
-
-    if (concoursIndex < 1 || concoursIndex > *numConcours) {
-        printf("Identifiant incorrect\n");
-        return;
-    }
-    printf("%s\n", ccours[concoursIndex - 1].jeu);
-
-    if (*numParticipants == 0) {
-        printf("Aucun participant\n");
-        return;
     }
 }
 
@@ -234,7 +234,7 @@ void bilan(const personne participants[], const epreuve ccours[], const int *num
 
     trie(clssement, scores, *numParticipants, concoursIndex - 1);
 
-    int écart;
+    int ecart;
     int rank;
 
     for (int i = 0; i < *numParticipants; i++) {
@@ -247,7 +247,7 @@ void bilan(const personne participants[], const epreuve ccours[], const int *num
                 break;
             }
         }
-        écart = anciennePos - (i + 1);
+        ecart = anciennePos - (i + 1);
 
         int points = scores[clssement[i]][concoursIndex - 1]; // Recupere les points du participant
 
@@ -256,10 +256,10 @@ void bilan(const personne participants[], const epreuve ccours[], const int *num
         }
 
         if ((i > 0 && points == scores[clssement[i - 1]][concoursIndex - 1]) || (i < *numParticipants - 1 && points == scores[clssement[i + 1]][concoursIndex - 1])) {
-            printf("%dex -> (%d) %s %s : %d points : %d place%s\n", rank, clssement[i] + 1, participants[clssement[i]].prenom, participants[clssement[i]].nom, points, écart, (écart == 1 || écart == -1 || écart == 0) ? "" : "s");
+            printf("%dex -> (%d) %s %s : %d points : %d place%s\n", rank, clssement[i] + 1, participants[clssement[i]].prenom, participants[clssement[i]].nom, points, ecart, (ecart == 1 || ecart == -1 || ecart == 0) ? "" : "s");
         }
         else {
-            printf("%d -> (%d) %s %s : %d points : %d place%s\n", rank, clssement[i] + 1, participants[clssement[i]].prenom, participants[clssement[i]].nom, points, écart, (écart == 1 || écart == -1 || écart == 0) ? "" : "s");
+            printf("%d -> (%d) %s %s : %d points : %d place%s\n", rank, clssement[i] + 1, participants[clssement[i]].prenom, participants[clssement[i]].nom, points, ecart, (ecart == 1 || ecart == -1 || ecart == 0) ? "" : "s");
         }
     }
 
