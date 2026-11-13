@@ -91,7 +91,7 @@ void concours(const epreuve ccours[], const int *numConcours, const int *numPart
                 nbrParticpants++;
             }
         }
-        printf("(%d) %s : %d participants\n", i+1, ccours[i].jeu, nbrParticpants);
+        printf("(%d) %s : %d participant%s\n", i+1, ccours[i].jeu, nbrParticpants, nbrParticpants > 1 ? "s" : "");
    }
 
     return;
@@ -125,6 +125,7 @@ void gain(const personne participants[], const epreuve ccours[], const int *numP
 
 void score(const personne participant[], const epreuve ccours[], const int *numParticipants, const int *numConcours, int scores[MAX_PARTICIPANTS][MAX_CONCOURS]) {
     int participantIndex;
+    int gain = 0;
     scanf("%d", &participantIndex);
 
     if (participantIndex < 1 || participantIndex > *numParticipants) {
@@ -134,14 +135,22 @@ void score(const personne participant[], const epreuve ccours[], const int *numP
 
     printf("%s %s\n", participant[participantIndex - 1].prenom, participant[participantIndex - 1].nom);
 
-    if (scores[participantIndex - 1][0] == 0) { // Si le participant n'a pas de score, on affiche "Aucun gain"
+    for (int i = 0; i < *numConcours; ++i) {
+        if (scores[participantIndex - 1][i] > 0) {
+            gain = 1;
+            break;
+        }
+    }
+
+    if (gain == 0) {
         printf("Aucun gain\n");
         return;
     }
 
     for (int i = 0; i < *numConcours; ++i) {
         if (scores[participantIndex - 1][i] > 0) {
-            printf("(%d) %s : %d points\n", i+1, ccours[i].jeu, scores[participantIndex - 1][i]);
+            int points = scores[participantIndex - 1][i];
+            printf("(%d) %s : %d point%s\n", i+1, ccours[i].jeu, points, points == 1 ? "" : "s");
         }
     }
 }

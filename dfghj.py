@@ -33,16 +33,16 @@ RESET = "\033[0m"
 
 def ensure_exe() -> str:
     """Utilise un exécutable existant ou compile main.c avec GCC, Clang ou MSVC."""
-    existing_exe = find_exe()
-    if existing_exe:
-        return existing_exe
-
-    compiler = shutil.which("gcc") or shutil.which("clang")
     source = BASE / "main.c"
     if not source.is_file():
         print(f"{RED}Fichier source introuvable : {source}{RESET}")
         sys.exit(1)
 
+    existing_exe = find_exe()
+    if existing_exe and Path(existing_exe).stat().st_mtime_ns >= source.stat().st_mtime_ns:
+        return existing_exe
+
+    compiler = shutil.which("gcc") or shutil.which("clang")
     executable = BASE / ("main.exe" if os.name == "nt" else "main")
     if compiler is not None:
         command = [compiler, str(source), "-o", str(executable)]
