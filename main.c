@@ -163,11 +163,11 @@ void trie(int clssement[], int scores[MAX_PARTICIPANTS][MAX_CONCOURS], int numPa
     }
 
     for (int i = 0; i < numParticipants; ++i) {
-        for (int j = i + 1; j < numParticipants; ++j) {
-            if (scores[clssement[i]][concoursIndex] < scores[clssement[j]][concoursIndex]) {
-                temp = clssement[i];
-                clssement[i] = clssement[j];
-                clssement[j] = temp;
+        for (int j = 0; j + 1 < numParticipants - i; ++j) {
+            if (scores[clssement[j]][concoursIndex] < scores[clssement[j + 1]][concoursIndex]) {
+                temp = clssement[j];
+                clssement[j] = clssement[j + 1];
+                clssement[j + 1] = temp;
             }
         }
     }
@@ -184,17 +184,27 @@ void classement (const personne participants[], const epreuve ccours[], const in
 
     printf("%s\n", ccours[concoursIndex - 1].jeu);
 
-    if (scores[clssement[0]][concoursIndex - 1] == 0) { // Si le concours n'a pas de score, on affiche "Aucun gain"
+    if (*numParticipants == 0) {
         printf("Aucun participant\n");
         return;
     }
-    
+
     trie(clssement, scores, *numParticipants, concoursIndex - 1);
-    // affichage du classement
+    int aScore = 0;
+    for (int i = 0; i < *numParticipants; ++i) {
+        if (scores[clssement[i]][concoursIndex - 1] > 0) {
+            aScore++;
+        }
+    }
+
+    if (aScore == 0) {
+        printf("Aucun participant\n");
+        return;
+    }
 
     int rank;
 
-    for (int i = 0; i < *numParticipants; i++) {
+    for (int i = 0; i < aScore; i++) {
 
         int points = scores[clssement[i]][concoursIndex - 1]; // Recupere les points du participant
 
@@ -202,7 +212,7 @@ void classement (const personne participants[], const epreuve ccours[], const in
             rank = i + 1;
         }
 
-        if ((i > 0 && points == scores[clssement[i - 1]][concoursIndex - 1]) || (i < *numParticipants - 1 && points == scores[clssement[i + 1]][concoursIndex - 1])) {
+        if ((i > 0 && points == scores[clssement[i - 1]][concoursIndex - 1]) || (i < aScore - 1 && points == scores[clssement[i + 1]][concoursIndex - 1])) {
             printf("%dex -> (%d) %s %s : %d point%s\n", rank, clssement[i] + 1, participants[clssement[i]].prenom, participants[clssement[i]].nom, points, (points == 1) ? "" : "s");
         }
         else {
@@ -222,15 +232,15 @@ void comparaison(const personne participants[], const epreuve ccours[], const in
 
     printf("%s versus %s\n", ccours[concoursIndex2 - 1].jeu, ccours[concoursIndex1 - 1].jeu);
 
-    int aDesScores = 0;
+    int siScores = 0;
     for (int i = 0; i < *numParticipants; ++i) {
         if (scores[i][concoursIndex1 - 1] > 0 || scores[i][concoursIndex2 - 1] > 0) {
-            aDesScores = 1;
+            siScores = 1;
             break;
         }
     }
 
-    if (!aDesScores) {
+    if (siScores == 0) {
         printf("Aucun participant\n");
         return;
     }
