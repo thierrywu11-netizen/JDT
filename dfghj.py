@@ -1,3 +1,4 @@
+import argparse
 import os
 import shutil
 import subprocess
@@ -32,16 +33,13 @@ RESET = "\033[0m"
 
 
 def ensure_exe() -> str:
-    """Utilise un exécutable existant ou compile main.c avec GCC, Clang ou MSVC."""
+    """Compile main.c avant les tests ou utilise un binaire à jour si aucun compilateur n'existe."""
     source = BASE / "main.c"
     if not source.is_file():
         print(f"{RED}Fichier source introuvable : {source}{RESET}")
         sys.exit(1)
 
     existing_exe = find_exe()
-    if existing_exe and Path(existing_exe).stat().st_mtime_ns >= source.stat().st_mtime_ns:
-        return existing_exe
-
     compiler = shutil.which("gcc") or shutil.which("clang")
     executable = BASE / ("main.exe" if os.name == "nt" else "main")
     if compiler is not None:
@@ -63,6 +61,8 @@ def ensure_exe() -> str:
             None,
         )
         if vcvars is None:
+            if existing_exe and Path(existing_exe).stat().st_mtime_ns >= source.stat().st_mtime_ns:
+                return existing_exe
             print(f"{RED}Exécutable introuvable et aucun compilateur C disponible.{RESET}")
             print(f"Compile {source} avec un compilateur C, puis relance ce script.")
             sys.exit(1)
@@ -123,6 +123,8 @@ def test_file_pair(
         return False, errors, stopped
     except OSError as error:
         print(f"{RED}Impossible de lancer l'exécutable {EXE} : {error}{RESET}")
+        if getattr(error, "winerror", None) == 4551:
+            print("Windows bloque le binaire avec une stratégie de contrôle d'application.")
         errors += 1
         stopped = error_limit is not None and errors >= error_limit
         return False, errors, stopped
@@ -217,6 +219,17 @@ def choose_tests() -> list[tuple[Path, Path]]:
     raise ValueError("Choix invalide.")
 
 
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Teste main.c avec les fichiers in/out.")
+    parser.add_argument(
+        "--sprint",
+        type=int,
+        choices=range(1, 5),
+        help="lance directement les tests d'un sprint (1 à 4)",
+    )
+    return parser.parse_args()
+
+
 def choose_error_limit() -> int | None:
     value = input(
         "Nombre maximal d'erreurs avant arrêt (0 = illimité) [0] : "
@@ -232,8 +245,9 @@ def choose_error_limit() -> int | None:
 
 def main():
     global EXE
+    args = parse_args()
     try:
-        tests = choose_tests()
+        tests = sprint_tests(args.sprint) if args.sprint is not None else choose_tests()
         error_limit = choose_error_limit()
     except ValueError as error:
         print(f"{RED}{error}{RESET}")
