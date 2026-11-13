@@ -228,13 +228,21 @@ def parse_args() -> argparse.Namespace:
         choices=range(1, 5),
         help="lance directement les tests d'un sprint (1 à 4)",
     )
+    parser.add_argument(
+        "--error-limit",
+        type=int,
+        help="nombre maximal d'erreurs avant arrêt (0 = illimité, sans invite)",
+    )
     return parser.parse_args()
 
 
-def choose_error_limit() -> int | None:
-    value = input(
-        "Nombre maximal d'erreurs avant arrêt (0 = illimité) [0] : "
-    ).strip() or "0"
+def choose_error_limit(argument: int | None) -> int | None:
+    if argument is not None:
+        if argument < 0:
+            raise ValueError("Le nombre d'erreurs doit être positif ou nul.")
+        return argument or None
+
+    value = input("Nombre maximal d'erreurs avant arrêt (0 = illimité) [0] : ").strip() or "0"
     try:
         limit = int(value)
     except ValueError as error:
@@ -249,7 +257,7 @@ def main():
     args = parse_args()
     try:
         tests = sprint_tests(args.sprint) if args.sprint is not None else choose_tests()
-        error_limit = choose_error_limit()
+        error_limit = choose_error_limit(args.error_limit)
     except ValueError as error:
         print(f"{RED}{error}{RESET}")
         sys.exit(1)

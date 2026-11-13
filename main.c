@@ -20,7 +20,7 @@ typedef struct {
 } epreuve;
 
 int ancienClassement[MAX_CONCOURS][MAX_PARTICIPANTS];
-int bilanInitialise[MAX_CONCOURS];
+int ancienClassementInitialise[MAX_CONCOURS];
 
 void inscrire(personne participants[], int *numParticipants) {
     personne p;
@@ -115,6 +115,14 @@ void gain(const personne participants[], const epreuve ccours[], const int *numP
     if (points < 1) {
         printf("Points incorrects\n");
         return;
+    }
+
+    int indexConcours = concoursIndex - 1;
+    if (!ancienClassementInitialise[indexConcours]) {
+        for (int i = 0; i < *numParticipants; ++i) {
+            ancienClassement[indexConcours][i] = 1;
+        }
+        ancienClassementInitialise[indexConcours] = 1;
     }
 
     for (int i = 0; i < points; ++i) {
@@ -296,13 +304,6 @@ void bilan(const personne participants[], const epreuve ccours[], const int *num
     }
 
     int indexConcours = concoursIndex - 1;
-    if (!bilanInitialise[indexConcours]) {
-        for (int i = 0; i < *numParticipants; ++i) {
-            ancienClassement[indexConcours][i] = 1;
-        }
-        bilanInitialise[indexConcours] = 1;
-    }
-
     int rank;
     for (int i = 0; i < participantsAvecScore; ++i) {
         int p = clssement[i];
@@ -312,7 +313,11 @@ void bilan(const personne participants[], const epreuve ccours[], const int *num
             rank = i + 1;
         }
 
-        int ecart = ancienClassement[indexConcours][p] - rank;
+        int ancienRang = ancienClassement[indexConcours][p];
+        if (ancienRang == 0) {
+            ancienRang = 2;
+        }
+        int ecart = ancienRang - rank;
         const char *placeSuffix = (ecart < -1 || ecart > 1) ? "s" : "";
         const char *pointSuffix = points == 1 ? "" : "s";
 
