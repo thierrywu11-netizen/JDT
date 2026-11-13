@@ -19,7 +19,8 @@ typedef struct {
     char jeu[NB_CARACTERES];
 } epreuve;
 
-int ancienClassement[MAX_PARTICIPANTS]; //classement précédent des participants pour le bilan
+int ancienClassement[MAX_CONCOURS][MAX_PARTICIPANTS];
+int bilanInitialise[MAX_CONCOURS];
 
 void inscrire(personne participants[], int *numParticipants) {
     personne p;
@@ -281,46 +282,52 @@ void bilan(const personne participants[], const epreuve ccours[], const int *num
         return;
     }
 
-    if (ancienClassement[0] == 0) { // Si le classement n'a pas encore été initialisé, on l'initialise
-        for (int i = 0; i < *numParticipants; ++i) {
-            ancienClassement[i] = i;
+    trie(clssement, scores, *numParticipants, concoursIndex - 1);
+    int participantsAvecScore = 0;
+    for (int i = 0; i < *numParticipants; ++i) {
+        if (scores[clssement[i]][concoursIndex - 1] > 0) {
+            participantsAvecScore++;
         }
     }
-    // Initialisation des tableaux
 
-    trie(clssement, scores, *numParticipants, concoursIndex - 1);
+    if (participantsAvecScore == 0) {
+        printf("Aucun participant\n");
+        return;
+    }
 
-    int ecart;
-    int rank;
-
-    for (int i = 0; i < *numParticipants; i++) {
-        
-        int p = clssement[i];
-        int anciennePos = 0;
-        for (int k = 0; k < *numParticipants; k++) {
-            if (ancienClassement[k] == p) {
-                anciennePos = k + 1;
-                break;
-            }
+    int indexConcours = concoursIndex - 1;
+    if (!bilanInitialise[indexConcours]) {
+        for (int i = 0; i < *numParticipants; ++i) {
+            ancienClassement[indexConcours][i] = 1;
         }
-        ecart = anciennePos - (i + 1);
+        bilanInitialise[indexConcours] = 1;
+    }
 
-        int points = scores[clssement[i]][concoursIndex - 1]; // Recupere les points du participant
+    int rank;
+    for (int i = 0; i < participantsAvecScore; ++i) {
+        int p = clssement[i];
+        int points = scores[p][indexConcours];
 
-        if (i == 0 || points != scores[clssement[i - 1]][concoursIndex - 1]) { 
+        if (i == 0 || points != scores[clssement[i - 1]][indexConcours]) {
             rank = i + 1;
         }
 
-        if ((i > 0 && points == scores[clssement[i - 1]][concoursIndex - 1]) || (i < *numParticipants - 1 && points == scores[clssement[i + 1]][concoursIndex - 1])) {
-            printf("%dex -> (%d) %s %s : %d points : %d place%s\n", rank, clssement[i] + 1, participants[clssement[i]].prenom, participants[clssement[i]].nom, points, ecart, (ecart == 1 || ecart == -1 || ecart == 0) ? "" : "s");
+        int ecart = ancienClassement[indexConcours][p] - rank;
+        const char *placeSuffix = (ecart < -1 || ecart > 1) ? "s" : "";
+        const char *pointSuffix = points == 1 ? "" : "s";
+
+        if ((i > 0 && points == scores[clssement[i - 1]][indexConcours]) ||
+            (i < participantsAvecScore - 1 && points == scores[clssement[i + 1]][indexConcours])) {
+            printf("%dex -> (%d) %s %s : %d point%s : %+d place%s\n",
+                   rank, p + 1, participants[p].prenom, participants[p].nom,
+                   points, pointSuffix, ecart, placeSuffix);
         }
         else {
-            printf("%d -> (%d) %s %s : %d points : %d place%s\n", rank, clssement[i] + 1, participants[clssement[i]].prenom, participants[clssement[i]].nom, points, ecart, (ecart == 1 || ecart == -1 || ecart == 0) ? "" : "s");
+            printf("%d -> (%d) %s %s : %d point%s : %+d place%s\n",
+                   rank, p + 1, participants[p].prenom, participants[p].nom,
+                   points, pointSuffix, ecart, placeSuffix);
         }
-    }
-
-    for (int i = 0; i < *numParticipants; ++i) {
-        ancienClassement[i] = clssement[i];
+        ancienClassement[indexConcours][p] = rank;
     }
 }
 

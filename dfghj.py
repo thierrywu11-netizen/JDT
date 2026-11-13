@@ -1,5 +1,6 @@
 import argparse
 import os
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -32,23 +33,66 @@ RESET = "\033[0m"
 
 
 def ensure_exe() -> str:
-    """Trouve le programme compilé et refuse un binaire plus ancien que main.c."""
+    """Utilise un binaire à jour ou compile main.c avec GCC, Clang ou MSVC."""
     source = BASE / "main.c"
     if not source.is_file():
         print(f"{RED}Fichier source introuvable : {source}{RESET}")
         sys.exit(1)
 
     existing_exe = find_exe()
-    if not existing_exe:
-        print(f"{RED}Exécutable introuvable. Compile {source} avec ton IDE, puis relance ce script.{RESET}")
+    if existing_exe and Path(existing_exe).stat().st_mtime_ns >= source.stat().st_mtime_ns:
+        return existing_exe
+
+    compiler = shutil.which("gcc") or shutil.which("clang")
+    executable = BASE / ("main.exe" if os.name == "nt" else "main")
+    if compiler is not None:
+        command = [compiler, str(source), "-o", str(executable)]
+        use_shell = False
+    else:
+        vs_roots = (
+            Path(os.environ.get("ProgramFiles(x86)", r"C:\Program Files (x86)"))
+            / "Microsoft Visual Studio",
+            Path(os.environ.get("ProgramFiles", r"C:\Program Files"))
+            / "Microsoft Visual Studio",
+        )
+        vcvars = next(
+            (
+                path
+                for root in vs_roots
+                for path in root.glob("*/*/VC/Auxiliary/Build/vcvarsall.bat")
+            ),
+            None,
+        )
+        if vcvars is None:
+            print(f"{RED}Exécutable introuvable ou trop ancien, et aucun compilateur C disponible.{RESET}")
+            print(f"Compile {source} avec ton IDE, puis relance ce script.")
+            sys.exit(1)
+
+        command = f'call "{vcvars}" x64 >nul && cl /nologo /Fe:"{executable}" "{source}"'
+        use_shell = True
+
+    try:
+        result = subprocess.run(
+            command,
+            shell=use_shell,
+            cwd=BASE,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+        )
+    except OSError as error:
+        print(f"{RED}Impossible de lancer le compilateur : {error}{RESET}")
         sys.exit(1)
 
-    if Path(existing_exe).stat().st_mtime_ns < source.stat().st_mtime_ns:
-        print(f"{RED}L'exécutable {existing_exe} est plus ancien que main.c.{RESET}")
-        print("Recompile main.c dans ton IDE, puis relance ce script.")
-        sys.exit(1)
+    if result.returncode != 0:
+        print(f"{RED}Échec de la compilation de main.c :{RESET}")
+        print(result.stdout, end="")
+        print(result.stderr, end="")
+        sys.exit(result.returncode)
 
-    return existing_exe
+    print(f"{GREEN}Compilation réussie : {executable}{RESET}")
+    return str(executable)
 
 
 def test_file_pair(
