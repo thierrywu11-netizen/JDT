@@ -42,7 +42,7 @@ void inscrire(personne participants[], int *numParticipants) {
 void participant(const personne participants[], const int *numParticipants, const int *numConcours, const int scores[MAX_PARTICIPANTS][MAX_CONCOURS]) {
 
     if (*numParticipants == 0) {        /*verifie si y'a des participants */
-        printf("Aucun participant\n");
+        printf("Aucun participant inscrit\n");
         return;
     }
 
@@ -101,8 +101,18 @@ void gain(const personne participants[], const epreuve ccours[], const int *numP
     int participantIndex, concoursIndex, points;
     scanf("%d %d %d", &participantIndex, &concoursIndex, &points);
 
-    if (participantIndex < 1 || participantIndex > *numParticipants || concoursIndex < 1 || concoursIndex > *numConcours) {
-        printf("Index invalide\n");
+    if (participantIndex < 1 || participantIndex > *numParticipants) {
+        printf("Participant incorrect\n");
+        return;
+    }
+
+    if (concoursIndex < 1 || concoursIndex > *numConcours) {
+        printf("Concours incorrect\n");
+        return;
+    }
+
+    if (points < 1) {
+        printf("Points incorrects\n");
         return;
     }
 
@@ -116,7 +126,7 @@ void gain(const personne participants[], const epreuve ccours[], const int *numP
 void verif(const personne participants[], const epreuve ccours[], const int *numParticipants, const int *numConcours, int concoursIndex, int participantIndex, int scores[MAX_PARTICIPANTS][MAX_CONCOURS]) {
     
     if (participantIndex < 1 || participantIndex > *numParticipants) {
-        printf("Identifiant incorrect\n");
+        printf("Identifiant incorrect\n"); 
         return;
     }
 
