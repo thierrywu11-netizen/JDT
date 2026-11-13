@@ -123,32 +123,22 @@ void gain(const personne participants[], const epreuve ccours[], const int *numP
     printf("Gain enregistre\n");
 }
 
-void verif(const personne participants[], const epreuve ccours[], const int *numParticipants, const int *numConcours, int concoursIndex, int participantIndex, int scores[MAX_PARTICIPANTS][MAX_CONCOURS]) {
-    
+void score(const personne participant[], const epreuve ccours[], const int *numParticipants, const int *numConcours, int scores[MAX_PARTICIPANTS][MAX_CONCOURS]) {
+    int participantIndex;
+    scanf("%d", &participantIndex);
+
     if (participantIndex < 1 || participantIndex > *numParticipants) {
         printf("Identifiant incorrect\n"); 
         return;
     }
 
-    if (concoursIndex < 1 || concoursIndex > *numConcours) {
-        printf("Identifiant incorrect\n");
-        return;
-    }
-    printf("%s\n", ccours[concoursIndex - 1].jeu);
-
-    if (*numParticipants == 0) {
-        printf("Aucun participant\n");
-        return;
-    }
-}
-
-void score(const personne participant[], const epreuve ccours[], const int *numParticipants, const int *numConcours, int scores[MAX_PARTICIPANTS][MAX_CONCOURS]) {
-    int participantIndex;
-    scanf("%d", &participantIndex);
-
-    verif(participant, ccours, numParticipants, numConcours, 1, participantIndex, scores);
-
     printf("%s %s:\n", participant[participantIndex - 1].prenom, participant[participantIndex - 1].nom);
+
+    if (scores[participantIndex - 1][0] == 0) { // Si le participant n'a pas de score, on affiche "Aucun gain"
+        printf("Aucun gain\n");
+        return;
+    }
+
     for (int i = 0; i < *numConcours; ++i) {
         if (scores[participantIndex - 1][i] > 0) {
             printf("(%d) %s: %d points\n", i+1, ccours[i].jeu, scores[participantIndex - 1][i]);
@@ -178,8 +168,17 @@ void classement (const personne participants[], const epreuve ccours[], const in
     int concoursIndex;
     scanf("%d", &concoursIndex);
 
-    verif(participants, ccours, numParticipants, numConcours, concoursIndex, 1, scores);
+    if (concoursIndex < 1 || concoursIndex > *numConcours) {
+        printf("Identifiant incorrect\n");
+        return;
+    }
+
     printf("%s\n", ccours[concoursIndex - 1].jeu);
+
+    if (scores[clssement[0]][concoursIndex - 1] == 0) { // Si le concours n'a pas de score, on affiche "Aucun gain"
+        printf("Aucun participant\n");
+        return;
+    }
     
     trie(clssement, scores, *numParticipants, concoursIndex - 1);
     // affichage du classement
@@ -207,8 +206,21 @@ void comparaison(const personne participants[], const epreuve ccours[], const in
     int concoursIndex1, concoursIndex2;
     scanf("%d %d", &concoursIndex1, &concoursIndex2);
 
-    verif(participants, ccours, numParticipants, numConcours, concoursIndex1, 1, scores);
-    verif(participants, ccours, numParticipants, numConcours, concoursIndex2, 1, scores);
+    if (concoursIndex1 < 1 || concoursIndex1 > *numConcours || concoursIndex2 < 1 || concoursIndex2 > *numConcours) {
+        printf("Identifiant incorrect\n");
+        return;
+    }
+
+    if (scores[0][concoursIndex1 - 1] == 0 || scores[0][concoursIndex2 - 1] == 0) {
+        printf("Aucun participant\n");
+        return;
+    }
+
+    for (int i = 0; i < *numParticipants; ++i) {
+        if (scores[i][concoursIndex1 - 1] == 0 && scores[i][concoursIndex2 - 1] == 0) {
+            printf("Concours incompatibles\n");
+            return;
+        }
 
     printf("%s versus %s\n", ccours[concoursIndex2 - 1].jeu, ccours[concoursIndex1 - 1].jeu);
 
@@ -226,7 +238,10 @@ void bilan(const personne participants[], const epreuve ccours[], const int *num
     int concoursIndex;
     scanf("%d", &concoursIndex);
 
-    verif(participants, ccours, numParticipants, numConcours, concoursIndex, 1, scores);
+    if (concoursIndex < 1 || concoursIndex > *numConcours) {
+        printf("Identifiant incorrect\n");
+        return;
+    }
 
     printf("%s\n", ccours[concoursIndex - 1].jeu);
     
