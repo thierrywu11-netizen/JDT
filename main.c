@@ -221,6 +221,7 @@ void comparaison(const personne participants[], const epreuve ccours[], const in
             printf("Concours incompatibles\n");
             return;
         }
+    }
 
     printf("%s versus %s\n", ccours[concoursIndex2 - 1].jeu, ccours[concoursIndex1 - 1].jeu);
 
@@ -231,7 +232,6 @@ void comparaison(const personne participants[], const epreuve ccours[], const in
         float a = (points1 == 0) ? 0 : (float)points2 / (float)points1; // ? permet de ne pas diviser par 0
         printf("(%d) %s %s : %d points/%d points : %.2f%%\n", i + 1, participants[i].prenom, participants[i].nom, points2, points1, a * 100);
     }
-
 }
 
 void bilan(const personne participants[], const epreuve ccours[], const int *numParticipants, const int *numConcours, int clssement[], int scores[MAX_PARTICIPANTS][MAX_CONCOURS]) {
