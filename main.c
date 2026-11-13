@@ -220,26 +220,38 @@ void comparaison(const personne participants[], const epreuve ccours[], const in
         return;
     }
 
-    if (scores[0][concoursIndex1 - 1] == 0 || scores[0][concoursIndex2 - 1] == 0) {
+    printf("%s versus %s\n", ccours[concoursIndex2 - 1].jeu, ccours[concoursIndex1 - 1].jeu);
+
+    int aDesScores = 0;
+    for (int i = 0; i < *numParticipants; ++i) {
+        if (scores[i][concoursIndex1 - 1] > 0 || scores[i][concoursIndex2 - 1] > 0) {
+            aDesScores = 1;
+            break;
+        }
+    }
+
+    if (!aDesScores) {
         printf("Aucun participant\n");
         return;
     }
 
     for (int i = 0; i < *numParticipants; ++i) {
-        if (scores[i][concoursIndex1 - 1] == 0 && scores[i][concoursIndex2 - 1] == 0) {
+        if (scores[i][concoursIndex2 - 1] > 0 && scores[i][concoursIndex1 - 1] == 0) {
             printf("Concours incompatibles\n");
             return;
         }
     }
 
-    printf("%s versus %s\n", ccours[concoursIndex2 - 1].jeu, ccours[concoursIndex1 - 1].jeu);
-
     for (int i = 0; i < *numParticipants; ++i) {
         int points1 = scores[i][concoursIndex1 - 1];
         int points2 = scores[i][concoursIndex2 - 1];
 
-        float a = (points1 == 0) ? 0 : (float)points2 / (float)points1; // ? permet de ne pas diviser par 0
-        printf("(%d) %s %s : %d points/%d points : %.2f%%\n", i + 1, participants[i].prenom, participants[i].nom, points2, points1, a * 100);
+        if (points1 == 0 && points2 == 0) {
+            continue;
+        }
+
+        float ratio = (float)points2 / (float)points1;
+        printf("(%d) %s %s : %d point%s/%d point%s : %.2f%%\n", i + 1, participants[i].prenom, participants[i].nom, points2, points2 <= 1 ? "" : "s", points1, points1 <= 1 ? "" : "s", ratio * 100);
     }
 }
 
