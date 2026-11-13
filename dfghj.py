@@ -1,8 +1,7 @@
 import os
-import queue
+import shutil
 import subprocess
 import sys
-import threading
 from pathlib import Path
 
 
@@ -10,17 +9,16 @@ BASE = Path(__file__).resolve().parent
 
 
 def find_exe() -> str:
-    """Cherche l'exécutable dans build/ puis src/ (Windows : main.exe, sinon main)."""
-    for folder in (BASE.parent / "build", BASE.parent / "src", BASE):
+    """Cherche l'exécutable dans le projet."""
+    for folder in (BASE, BASE / "build", BASE / "src", BASE.parent / "build", BASE.parent / "src"):
         for name in ("main.exe", "main"):
             if (folder / name).is_file():
                 return str(folder / name)
-    return str(BASE / "main.exe")
+    return ""
 
 
-EXE = find_exe()
+EXE = ""
 TIMEOUT = 5
-RESPONSE_TIMEOUT = 0.1
 
 # Active les couleurs ANSI dans le terminal Windows et force l'UTF-8 en sortie
 os.system("")
@@ -33,75 +31,67 @@ YELLOW = "\033[93m"
 RESET = "\033[0m"
 
 
-class Program:
-    """Lance le programme C et lit sa sortie ligne par ligne (compatible Windows)."""
+def ensure_exe() -> str:
+    """Utilise un exécutable existant ou compile main.c avec GCC, Clang ou MSVC."""
+    existing_exe = find_exe()
+    if existing_exe:
+        return existing_exe
 
-    def __init__(self, exe: str, cwd: str):
-        self.proc = subprocess.Popen(
-            [exe],
-            stdin=subprocess.PIPE,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            cwd=cwd,
+    compiler = shutil.which("gcc") or shutil.which("clang")
+    source = BASE / "main.c"
+    if not source.is_file():
+        print(f"{RED}Fichier source introuvable : {source}{RESET}")
+        sys.exit(1)
+
+    executable = BASE / ("main.exe" if os.name == "nt" else "main")
+    if compiler is not None:
+        command = [compiler, str(source), "-o", str(executable)]
+        use_shell = False
+    else:
+        vs_roots = (
+            Path(os.environ.get("ProgramFiles(x86)", r"C:\Program Files (x86)"))
+            / "Microsoft Visual Studio",
+            Path(os.environ.get("ProgramFiles", r"C:\Program Files"))
+            / "Microsoft Visual Studio",
+        )
+        vcvars = next(
+            (
+                path
+                for root in vs_roots
+                for path in root.glob("*/*/VC/Auxiliary/Build/vcvarsall.bat")
+            ),
+            None,
+        )
+        if vcvars is None:
+            print(f"{RED}Exécutable introuvable et aucun compilateur C disponible.{RESET}")
+            print(f"Compile {source} avec un compilateur C, puis relance ce script.")
+            sys.exit(1)
+
+        command = f'call "{vcvars}" x64 >nul && cl /nologo /Fe:"{executable}" "{source}"'
+        use_shell = True
+
+    try:
+        result = subprocess.run(
+            command,
+            shell=use_shell,
+            cwd=BASE,
+            capture_output=True,
             text=True,
             encoding="utf-8",
             errors="replace",
-            bufsize=1,
         )
-        self.lines: "queue.Queue[str | None]" = queue.Queue()
-        self.eof = False
-        threading.Thread(target=self._reader, daemon=True).start()
+    except OSError as error:
+        print(f"{RED}Impossible de lancer le compilateur : {error}{RESET}")
+        sys.exit(1)
 
-    def _reader(self):
-        try:
-            for line in self.proc.stdout:
-                self.lines.put(line.rstrip("\r\n"))
-        finally:
-            self.lines.put(None)  # None = fin du flux
+    if result.returncode != 0:
+        print(f"{RED}Échec de la compilation de main.c :{RESET}")
+        print(result.stdout, end="")
+        print(result.stderr, end="")
+        sys.exit(result.returncode)
 
-    def send(self, line: str) -> bool:
-        try:
-            self.proc.stdin.write(line + "\n")
-            self.proc.stdin.flush()
-            return True
-        except (BrokenPipeError, OSError, ValueError):
-            return False
-
-    def read_available(self) -> list[str]:
-        response = []
-        while not self.eof:
-            try:
-                item = self.lines.get(timeout=RESPONSE_TIMEOUT)
-            except queue.Empty:
-                break
-            if item is None:
-                self.eof = True
-                break
-            response.append(item)
-        return response
-
-    def read_until_exit(self) -> list[str] | None:
-        response = []
-        while not self.eof:
-            try:
-                item = self.lines.get(timeout=TIMEOUT)
-            except queue.Empty:
-                return None
-            if item is None:
-                self.eof = True
-                break
-            response.append(item)
-        return response
-
-    def close(self):
-        try:
-            self.proc.stdin.close()
-        except Exception:
-            pass
-        try:
-            self.proc.wait(timeout=1)
-        except subprocess.TimeoutExpired:
-            self.proc.kill()
+    print(f"{GREEN}Compilation réussie : {executable}{RESET}")
+    return str(executable)
 
 
 def test_file_pair(
@@ -111,56 +101,64 @@ def test_file_pair(
     errors: int,
 ) -> tuple[bool, int, bool]:
     print(f"\n--- Test : {in_file.parent.name}/{in_file.name} ---")
-    inputs = in_file.read_text(encoding="utf-8").splitlines()
+    inputs = in_file.read_text(encoding="utf-8")
     expected = out_file.read_text(encoding="utf-8").splitlines()
 
-    if not Path(EXE).is_file():
-        print(f"{RED}Exécutable introuvable : {EXE}{RESET}")
-        print("Compile d'abord ton programme (ex. : gcc main.c -o main.exe).")
-        sys.exit(1)
+    try:
+        result = subprocess.run(
+            [EXE],
+            input=inputs,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            cwd=BASE,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            timeout=TIMEOUT,
+        )
+    except subprocess.TimeoutExpired:
+        print(f"    TIMEOUT : le programme ne s'est pas terminé en {TIMEOUT}s")
+        errors += 1
+        stopped = error_limit is not None and errors >= error_limit
+        return False, errors, stopped
+    except OSError as error:
+        print(f"{RED}Impossible de lancer l'exécutable {EXE} : {error}{RESET}")
+        errors += 1
+        stopped = error_limit is not None and errors >= error_limit
+        return False, errors, stopped
 
-    child = Program(EXE, str(BASE))
-
-    received = []
+    received = result.stdout.splitlines()
     test_errors = 0
-    for i, line in enumerate(inputs):
-        child.send(line)
-
-        if line.strip().upper() == "EXIT":
-            response = child.read_until_exit()
-            if response is None:
-                print(f"    TIMEOUT : le programme ne s'est pas terminé en {TIMEOUT}s")
-                child.close()
-                errors += 1
-                return False, errors, error_limit is not None and errors >= error_limit
-        else:
-            response = child.read_available()
-
-        received.extend(response)
-        first_result_index = len(received) - len(response)
-        for response_index, result in enumerate(response):
-            result_index = first_result_index + response_index
-            want = expected[result_index] if result_index < len(expected) else None
-            
-            if result == want:
-                status = GREEN + "CORRECT" + RESET
-                print(f"Réponse : {result!r} -> {status}")
-            else:
-                errors += 1
-                test_errors += 1
-                status = RED + "ERREUR" + RESET
-                print(f"Réponse : {result!r} -> {status}")
-                print(f"  🎯 Attendu : {want!r}")
-                if error_limit is not None and errors >= error_limit:
-                    print(f"{YELLOW}Limite de {error_limit} erreur(s) atteinte.{RESET}")
-                    child.close()
-                    return False, errors, True
-
-    child.close()
-    ok = sum(got == want for got, want in zip(received, expected))
+    line_errors = 0
     max_lines = max(len(received), len(expected))
+    for i in range(max_lines):
+        got = received[i] if i < len(received) else None
+        want = expected[i] if i < len(expected) else None
+
+        if got == want:
+            print(f"Réponse : {got!r} -> {GREEN}CORRECT{RESET}")
+            continue
+
+        errors += 1
+        test_errors += 1
+        line_errors += 1
+        print(f"Réponse : {got!r} -> {RED}ERREUR{RESET}")
+        print(f"  🎯 Attendu : {want!r}")
+        if error_limit is not None and errors >= error_limit:
+            print(f"{YELLOW}Limite de {error_limit} erreur(s) atteinte.{RESET}")
+            return False, errors, True
+
+    if result.returncode != 0:
+        errors += 1
+        test_errors += 1
+        print(f"{RED}Le programme s'est terminé avec le code {result.returncode}.{RESET}")
+        if error_limit is not None and errors >= error_limit:
+            print(f"{YELLOW}Limite de {error_limit} erreur(s) atteinte.{RESET}")
+            return False, errors, True
+
+    ok = max_lines - line_errors
     print(f"\n{ok}/{max_lines} lignes correctes pour ce fichier")
-    
+
     stopped = error_limit is not None and errors >= error_limit
     return test_errors == 0, errors, stopped
 
@@ -233,6 +231,7 @@ def choose_error_limit() -> int | None:
 
 
 def main():
+    global EXE
     try:
         tests = choose_tests()
         error_limit = choose_error_limit()
@@ -243,6 +242,8 @@ def main():
     if not tests:
         print(f"{RED}Aucun test trouvé. Vérifiez l'emplacement de vos fichiers in/out.{RESET}")
         sys.exit(1)
+
+    EXE = ensure_exe()
 
     success = True
     errors = 0
